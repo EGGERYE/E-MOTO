@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电驴冲冲 - 产品原型演示</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #FF6B35;
+  --primary-light: #FF8F5E;
+  --primary-dark: #E55A25;
+  --accent: #00B4D8;
+  --accent-light: #48CAE4;
+  --success: #06D6A0;
+  --warning: #FFD166;
+  --danger: #EF476F;
+  --bg: #FFFFFF;
+  --bg2: #F6F7FA;
+  --bg3: #E9ECF3;
+  --text: #121212;
+  --text2: #5A5A5A;
+  --text3: #8A8A8A;
+  --card: rgba(0,0,0,0.03);
+  --border: rgba(0,0,0,0.08);
+  --glow: 0 0 20px rgba(255,107,53,0.12);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+
+/* Phone frame */
+.phone-frame {
+  width:375px; height:812px; margin:40px auto;
+  border-radius:44px; border:3px solid #333;
+  background:var(--bg); overflow:hidden;
+  position:relative;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:28px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 14px; font-size:11px; color:#1a1a1a; background:transparent;
+  z-index:120; transition:background .2s ease, color .2s ease;
+  pointer-events:none;
+}
+.status-right { display:flex; align-items:center; gap:8px; }
+.signal { display:flex; align-items:flex-end; gap:2px; }
+.signal i { width:3px; background:#1a1a1a; border-radius:2px; display:inline-block; }
+.signal i:nth-child(1){ height:6px; opacity:.6; }
+.signal i:nth-child(2){ height:9px; opacity:.7; }
+.signal i:nth-child(3){ height:12px; opacity:.85; }
+.signal i:nth-child(4){ height:14px; }
+.battery {
+  position:relative; width:22px; height:10px; border:1px solid #1a1a1a; border-radius:2px;
+}
+.battery::after{
+  content:''; position:absolute; right:-3px; top:2px; width:2px; height:6px; background:#1a1a1a; border-radius:1px;
+}
+.battery .level{ height:100%; width:70%; background:#1a1a1a; }
+.status-icon {
+  font-size:11px; line-height:1; color:#1a1a1a;
+}
+.status-vpn {
+  padding:1px 5px; border-radius:6px; font-size:10px; font-weight:700;
+  border:1px solid rgba(0,0,0,0.15); background:rgba(0,0,0,0.04); color:#1a1a1a;
+}
+.phone-content { padding-top:28px; }
+.phone-content {
+  width:100%; height:100%; overflow-y:auto; overflow-x:hidden;
+  scrollbar-width:none;
+}
+.phone-content::-webkit-scrollbar { display:none; }
+
+/* Screen tabs removed (per request) */
+
+/* Screen containers */
+.screen { display:none; padding:0 16px 100px; animation:fadeUp .4s ease; }
+.screen.active { display:block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+/* ========== SCREEN 1: MAP ========== */
+.map-container {
+  width:calc(100% + 32px); margin:0 -16px; height:320px;
+  background:#F0F2F7 url('C:/Users/EGGER/Desktop/电驴冲冲项目/微信图片_20260315162817_63_104.jpg') center/cover no-repeat;
+  position:relative; overflow:hidden;
+}
+.map-pin {
+  position:absolute; width:32px; height:32px; border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg); cursor:pointer; transition:all .3s;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+.map-pin:hover { transform:rotate(-45deg) scale(1.2); }
+.map-pin .pin-icon { transform:rotate(45deg); font-size:14px; }
+.map-pin.available { background:var(--success); }
+.map-pin.busy { background:var(--warning); }
+.map-pin.offline { background:var(--text3); }
+.map-pin.selected { box-shadow:0 0 0 3px rgba(255,107,53,0.5), 0 2px 12px rgba(0,0,0,0.4); }
+
+.map-me {
+  position:absolute; width:16px; height:16px; background:var(--accent);
+  border-radius:50%; border:3px solid #fff;
+  box-shadow:0 0 0 8px rgba(0,180,216,0.2);
+  top:55%; left:48%; z-index:10;
+}
+.map-me::after {
+  content:''; position:absolute; inset:-8px; border-radius:50%;
+  border:2px solid rgba(0,180,216,0.3);
+  animation:pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.8);opacity:0} }
+
+.map-detail {
+  position:absolute; left:12px; right:12px; bottom:12px;
+  background:#fff; border:1px solid rgba(0,0,0,0.08);
+  border-radius:16px; padding:12px 14px; font-size:12px;
+  box-shadow:0 12px 26px rgba(0,0,0,0.12);
+  display:none;
+}
+.map-detail.show { display:block; }
+.map-detail-title { font-weight:700; font-size:14px; }
+.map-detail-sub { color:var(--text2); margin-top:4px; }
+.map-detail-tags { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.status-available { background:var(--success); }
+.status-busy { background:var(--warning); }
+.status-offline { background:var(--text3); }
+
+/* Search bar */
+.search-bar {
+  margin:12px 0; padding:12px 16px; background:var(--bg2); border-radius:14px;
+  border:1px solid var(--border); display:flex; align-items:center; gap:10px;
+  font-size:13px; color:var(--text2);
+}
+.search-icon { font-size:16px; }
+.search-input {
+  border:none; outline:none; background:transparent; flex:1;
+  font-size:12px; color:var(--text);
+}
+.search-input::placeholder { color:var(--text3); }
+
+/* Station card */
+.station-card {
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:16px; margin:10px 0; transition:all .3s;
+}
+.station-card:hover { border-color:var(--primary); box-shadow:var(--glow); }
+.station-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.station-name { font-size:15px; font-weight:700; }
+.station-dist { font-size:12px; color:var(--accent); font-weight:500; }
+.station-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.tag {
+  padding:3px 10px; border-radius:8px; font-size:11px; font-weight:500;
+  background:rgba(255,255,255,0.06);
+}
+.tag.green { background:rgba(6,214,160,0.12); color:var(--success); }
+.tag.orange { background:rgba(255,107,53,0.12); color:var(--primary-light); }
+.tag.blue { background:rgba(0,180,216,0.12); color:var(--accent-light); }
+.tag.yellow { background:rgba(255,209,102,0.2); color:#B07600; }
+.tag.gray { background:rgba(0,0,0,0.06); color:var(--text3); }
+.station-info { display:flex; gap:16px; font-size:12px; color:var(--text2); }
+.station-info span { display:flex; align-items:center; gap:4px; }
+
+/* Filters & sorting */
+.filter-bar { display:flex; gap:8px; margin:6px 0 6px; }
+.filter-pill {
+  display:flex; align-items:center; gap:6px;
+  padding:5px 8px; border-radius:10px; border:1px solid var(--border);
+  background:var(--bg2); font-size:10px; cursor:pointer; color:var(--text2);
+  transition:all .2s;
+}
+.filter-pill .caret { font-size:9px; }
+.filter-pill.active { background:#fff; color:var(--text); border-color:rgba(0,0,0,0.12); box-shadow:0 6px 12px rgba(0,0,0,0.06); }
+.filters-wrap { margin:6px 0 10px; padding:6px; background:#fff; border:1px solid var(--border); border-radius:12px; }
+.filters-wrap.hidden { display:none; }
+.filter-section { display:none; }
+.filter-section.active { display:block; }
+.filter-row { display:flex; gap:8px; flex-wrap:wrap; }
+.filter-label { font-size:10px; color:var(--text3); padding:4px 2px; white-space:nowrap; }
+.chip {
+  padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+  background:var(--bg2); font-size:11px; cursor:pointer; color:var(--text2);
+  transition:all .2s;
+}
+.chip.active { background:rgba(255,107,53,0.12); color:var(--primary-dark); border-color:rgba(255,107,53,0.4); }
+.sort-row { margin-top:6px; }
+
+.station-card.active { border-color:var(--primary); box-shadow:var(--glow); }
+.station-card.alert { border-color:var(--danger); box-shadow:0 0 0 1px rgba(239,71,111,0.35), var(--glow); }
+.station-card .card-actions { display:flex; justify-content:flex-end; margin-top:8px; }
+.nav-btn {
+  border:none; background:#8EC9FF; color:#fff;
+  padding:6px 10px; border-radius:10px; font-size:11px; cursor:pointer;
+}
+.station-list { max-height:480px; overflow-y:auto; padding-right:2px; }
+.station-list::-webkit-scrollbar { width:6px; }
+.station-list::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.15); border-radius:6px; }
+
+/* AI recommendation */
+.ai-rec {
+  background:linear-gradient(135deg, rgba(255,107,53,0.08), rgba(0,180,216,0.08));
+  border:1px solid rgba(255,107,53,0.15); border-radius:14px;
+  padding:10px 12px; margin:8px 0;
+}
+.ai-rec-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.ai-badge {
+  background:linear-gradient(135deg, var(--primary), var(--accent));
+  padding:2px 10px; border-radius:10px; font-size:10px; font-weight:700; color:#fff;
+}
+.ai-rec-text { font-size:12px; line-height:1.5; color:var(--text); }
+.ai-rec-text strong { color:var(--primary-light); }
+
+/* ========== SCREEN 2: AI SCAN ========== */
+.scan-area {
+  width:calc(100% + 32px); margin:0 -16px; height:280px;
+  background:var(--bg2); position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.scan-frame {
+  width:220px; height:220px; border:2px solid var(--primary);
+  border-radius:16px; position:relative;
+}
+.scan-corner { position:absolute; width:24px; height:24px; border-color:var(--primary); border-style:solid; }
+.scan-corner.tl { top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:8px 0 0 0; }
+.scan-corner.tr { top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 8px 0 0; }
+.scan-corner.bl { bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 8px; }
+.scan-corner.br { bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 8px 0; }
+.scan-line {
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation:scanMove 2.5s ease-in-out infinite;
+}
+@keyframes scanMove { 0%{top:0} 50%{top:100%} 100%{top:0} }
+.scan-text {
+  position:absolute; bottom:16px; left:0; right:0; text-align:center;
+  font-size:12px; color:var(--text2);
+}
+
+.scan-result {
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:16px; margin:16px 0;
+}
+.scan-result-title { font-size:14px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.result-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.result-row:last-child { border:none; }
+.result-label { color:var(--text2); }
+.result-value { font-weight:500; }
+.result-value.ai { color:var(--accent); }
+
+.confidence-bar {
+  height:4px; background:var(--bg3); border-radius:2px; margin-top:12px; overflow:hidden;
+}
+.confidence-fill {
+  height:100%; border-radius:2px; transition:width 1.5s ease;
+  background:linear-gradient(90deg, var(--success), var(--accent));
+}
+
+/* ========== SCREEN 3: INSURANCE ========== */
+.insurance-hero {
+  background:linear-gradient(135deg, var(--primary-dark), #8B2FC9);
+  border-radius:20px; padding:20px; margin:8px 0 16px; position:relative; overflow:hidden;
+}
+.insurance-hero::before {
+  content:''; position:absolute; top:-30px; right:-30px; width:120px; height:120px;
+  background:rgba(255,255,255,0.06); border-radius:50%;
+}
+.insurance-hero h2 { font-size:20px; font-weight:900; margin-bottom:6px; }
+.insurance-hero p { font-size:12px; color:rgba(255,255,255,0.7); line-height:1.6; }
+
+.insurance-plan {
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:16px; margin:10px 0; position:relative; transition:all .3s; cursor:pointer;
+}
+.insurance-plan:hover { border-color:var(--primary); }
+.insurance-plan.popular::before {
+  content:'推荐'; position:absolute; top:-1px; right:16px;
+  background:var(--danger); color:#fff; font-size:10px; font-weight:700;
+  padding:2px 10px; border-radius:0 0 8px 8px;
+}
+.plan-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.plan-name { font-size:15px; font-weight:700; }
+.plan-price { text-align:right; }
+.plan-price .amount { font-size:22px; font-weight:900; color:var(--primary); }
+.plan-price .unit { font-size:11px; color:var(--text2); }
+.plan-features { display:flex; flex-direction:column; gap:6px; }
+.plan-feature { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:6px; }
+.plan-feature::before { content:'✓'; color:var(--success); font-weight:700; font-size:13px; }
+.plan-feature.highlight { color:var(--text); font-weight:500; }
+.plan-feature.highlight::before { color:var(--primary); }
+
+.plan-btn {
+  width:100%; padding:12px; border:none; border-radius:12px; font-size:14px;
+  font-weight:700; cursor:pointer; margin-top:12px; transition:all .3s;
+  font-family:inherit;
+}
+.plan-btn.primary { background:var(--primary); color:#fff; }
+.plan-btn.primary:hover { background:var(--primary-dark); }
+.plan-btn.outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
+
+.ai-pricing {
+  background:linear-gradient(135deg, rgba(0,180,216,0.06), rgba(6,214,160,0.06));
+  border:1px solid rgba(0,180,216,0.12); border-radius:14px;
+  padding:12px 14px; margin:16px 0; font-size:12px; line-height:1.7;
+}
+.ai-pricing-title { font-size:13px; font-weight:700; color:var(--accent); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.risk-row { display:flex; gap:10px; margin-top:8px; }
+.risk-chip {
+  padding:4px 10px; border-radius:999px; font-size:11px;
+  background:rgba(0,0,0,0.04); border:1px solid var(--border); color:var(--text2);
+}
+.risk-chip strong { color:var(--text); }
+
+.addon-grid { display:grid; gap:8px; margin-top:10px; }
+.addon-card {
+  border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+  background:#fff; display:flex; justify-content:space-between; align-items:center;
+}
+.addon-info { display:grid; gap:2px; }
+.addon-name { font-weight:700; font-size:13px; }
+.addon-sub { font-size:11px; color:var(--text2); }
+.addon-price { font-weight:700; color:var(--primary); font-size:13px; }
+.addon-btn {
+  padding:6px 10px; border-radius:10px; border:1px solid var(--primary);
+  background:rgba(255,107,53,0.1); color:var(--primary); font-size:11px; cursor:pointer;
+}
+
+/* ========== SCREEN 4: PROFILE ========== */
+.profile-header {
+  text-align:center; padding:20px 0;
+}
+.avatar {
+  width:64px; height:64px; border-radius:50%; margin:0 auto 10px;
+  background:linear-gradient(135deg, var(--primary), var(--accent));
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; font-weight:900; color:#fff;
+}
+.profile-name { font-size:17px; font-weight:700; }
+.profile-role { font-size:12px; color:var(--text2); margin-top:2px; }
+
+.stats-row { display:flex; gap:8px; margin:12px 0; }
+.stat-card {
+  flex:1; background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:14px 12px; text-align:center;
+}
+.stat-num { font-size:20px; font-weight:900; }
+.stat-num.orange { color:var(--primary); }
+.stat-num.blue { color:var(--accent); }
+.stat-num.green { color:var(--success); }
+.stat-label { font-size:11px; color:var(--text2); margin-top:2px; }
+
+.credit-section { margin:16px 0; }
+.credit-bar-bg {
+  height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; margin:8px 0;
+}
+.credit-bar-fill {
+  height:100%; border-radius:4px;
+  background:linear-gradient(90deg, var(--success), var(--accent));
+  transition:width 2s ease;
+}
+.credit-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--text2); }
+
+.menu-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0; border-bottom:1px solid var(--border); cursor:pointer;
+}
+.menu-item:hover .menu-label { color:var(--primary); }
+.menu-left { display:flex; align-items:center; gap:10px; }
+.menu-icon { font-size:18px; }
+.menu-label { font-size:14px; transition:color .2s; }
+.menu-arrow { color:var(--text3); font-size:12px; }
+
+/* Bottom nav */
+.bottom-nav {
+  position:absolute; bottom:0; left:0; right:0; height:80px;
+  background:linear-gradient(transparent, var(--bg) 20%);
+  display:flex; justify-content:space-around; align-items:center;
+  padding-bottom:16px; z-index:50;
+}
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  cursor:pointer; transition:all .2s; font-size:20px;
+}
+.nav-item span { font-size:10px; color:var(--text3); transition:color .2s; }
+.nav-item.active span { color:var(--primary); }
+
+/* Page wrapper for context */
+.page-wrapper {
+  max-width:1200px; margin:0 auto; padding:40px 20px;
+  display:flex; gap:60px; align-items:flex-start; justify-content:center;
+}
+.side-info { flex:1; max-width:480px; padding-top:40px; }
+.side-info h1 {
+  font-size:42px; font-weight:900; line-height:1.2; margin-bottom:16px;
+  background:linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.side-info .subtitle { font-size:16px; color:var(--text2); line-height:1.8; margin-bottom:32px; }
+.feature-list { display:flex; flex-direction:column; gap:16px; }
+.feature-item { display:flex; gap:14px; align-items:flex-start; }
+.feature-icon {
+  width:40px; height:40px; border-radius:12px; display:flex;
+  align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+}
+.feature-icon.orange { background:rgba(255,107,53,0.12); }
+.feature-icon.blue { background:rgba(0,180,216,0.12); }
+.feature-icon.green { background:rgba(6,214,160,0.12); }
+.feature-icon.pink { background:rgba(239,71,111,0.12); }
+.feature-title { font-size:14px; font-weight:700; margin-bottom:2px; }
+.feature-desc { font-size:12px; color:var(--text2); line-height:1.5; }
+
+.tech-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:28px; }
+.tech-tag {
+  padding:5px 14px; border-radius:20px; font-size:11px;
+  border:1px solid var(--border); color:var(--text2);
+}
+
+@media (max-width:900px) {
+  .page-wrapper { flex-direction:column; align-items:center; }
+  .side-info { max-width:375px; text-align:center; padding-top:0; }
+  .side-info h1 { font-size:32px; }
+  .feature-list { align-items:center; }
+  .feature-item { text-align:left; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+  <div class="side-info">
+    <h1>电驴冲冲</h1>
+    <p class="subtitle">
+      两轮电动车一站式服务平台<br>
+      AI找桩 · 智能比价 · 一键投保<br>
+      为3.8亿电动车用户打造的出行助手
+    </p>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon orange">⚡</div>
+        <div><div class="feature-title">AI拍照识桩</div><div class="feature-desc">拍一张照片，自动识别品牌、插头类型、功率、费用，零门槛众包建库</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon blue">🧠</div>
+        <div><div class="feature-title">智能充电规划</div><div class="feature-desc">结合电量、位置、时段电价，AI推荐最佳充电时机与地点</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon green">🛡️</div>
+        <div><div class="feature-title">保险商城</div><div class="feature-desc">意外险、三者险、充电自燃险一键投保，AI风险定价千人千面</div></div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon pink">🔍</div>
+        <div><div class="feature-title">反作弊风控体系</div><div class="feature-desc">GPS交叉验证+设备指纹+信用分体系，保障众包数据质量</div></div>
+      </div>
+    </div>
+    <div class="tech-tags">
+      <span class="tech-tag">微信小程序</span>
+      <span class="tech-tag">多模态AI识别</span>
+      <span class="tech-tag">LBS定位</span>
+      <span class="tech-tag">UBI保险定价</span>
+      <span class="tech-tag">众包+风控</span>
+      <span class="tech-tag">Vibe Coding</span>
+    </div>
+  </div>
+
+  <div class="phone-frame">
+    <div class="status-bar status-map" id="statusBar">
+      <div class="status-left" id="statusTime">--:--</div>
+      <div class="status-right">
+        <span class="status-icon">📍</span>
+        <span class="status-vpn">VPN</span>
+        <span class="status-icon">🔕</span>
+        <span>5G</span>
+        <div class="signal"><i></i><i></i><i></i><i></i></div>
+        <div class="battery"><div class="level"></div></div>
+        <span id="batteryText">54</span>
+      </div>
+    </div>
+    <div class="phone-content">
+      
+
+      <!-- SCREEN: MAP -->
+      <div class="screen active" id="screen-map">
+        <div class="map-container">
+          <div class="map-pin available" data-id="1" style="top:22%;left:28%" onclick="selectPin(this)" title="小绿人充电站"
+               data-name="小绿人 · 翠苑新村站" data-brand="小绿人" data-status="available" data-addr="西湖区翠苑新村北门车棚" data-ports="6/12" data-price="0.3元/时"
+               data-price-value="0.3" data-distance="350" data-power="800W" data-plugs="两头插 / 三头插" data-common="home" data-subway="留下">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin available" data-id="2" style="top:35%;left:58%" onclick="selectPin(this)" title="驴充充网点"
+               data-name="驴充充 · 文三路网点" data-brand="驴充充" data-status="available" data-addr="西湖区文三路 88 号" data-ports="3/10" data-price="0.5元/时"
+               data-price-value="0.5" data-distance="580" data-power="1200W" data-plugs="三头插" data-common="company" data-subway="西溪湿地南">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin busy" data-id="3" style="top:18%;left:62%" onclick="selectPin(this)" title="小兔充充"
+               data-name="小兔充充 · 白荡滩站" data-brand="小兔充充" data-status="busy" data-addr="西湖区白荡滩附近" data-ports="2/8" data-price="0.5元/时"
+               data-price-value="0.5" data-distance="900" data-power="900W" data-plugs="两头插" data-common="home" data-subway="西溪湿地南">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin available" data-id="4" style="top:40%;left:40%" onclick="selectPin(this)" title="云易充"
+               data-name="云易充 · 西溪乐天城" data-brand="云易充" data-status="available" data-addr="西湖区西溪乐天城" data-ports="5/12" data-price="0.4元/时"
+               data-price-value="0.4" data-distance="1200" data-power="1000W" data-plugs="两头插 / 三头插" data-common="company" data-subway="西溪湿地南">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin busy" data-id="5" style="top:60%;left:72%" onclick="selectPin(this)" title="猛犸充电"
+               data-name="猛犸充电 · 黄龙站" data-brand="猛犸充电" data-status="busy" data-addr="西湖区黄龙路 26 号" data-ports="1/8" data-price="0.6元/时"
+               data-price-value="0.6" data-distance="1800" data-power="1500W" data-plugs="三头插" data-common="company" data-subway="留下">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin available" data-id="6" style="top:48%;left:20%" onclick="selectPin(this)" title="云易充"
+               data-name="云易充 · 北山路站" data-brand="云易充" data-status="available" data-addr="西湖区北山路 56 号" data-ports="5/10" data-price="0.4元/时"
+               data-price-value="0.4" data-distance="2200" data-power="900W" data-plugs="两头插" data-common="home" data-subway="小和山">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin offline" data-id="7" style="top:75%;left:45%" onclick="selectPin(this)" title="天天充电"
+               data-name="天天充电 · 灵隐路站" data-brand="天天充电" data-status="offline" data-addr="西湖区灵隐路 9 号" data-ports="0/12" data-price="0.3元/时"
+               data-price-value="0.3" data-distance="2600" data-power="700W" data-plugs="两头插" data-common="home" data-subway="小和山">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin available" data-id="8" style="top:30%;left:80%" onclick="selectPin(this)" title="小兔充充"
+               data-name="小兔充充 · 湖滨站" data-brand="小兔充充" data-status="available" data-addr="西湖区湖滨步行街" data-ports="7/12" data-price="0.4元/时"
+               data-price-value="0.4" data-distance="3000" data-power="1000W" data-plugs="两头插 / 三头插" data-common="company" data-subway="留下">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin available" data-id="9" style="top:62%;left:58%" onclick="selectPin(this)" title="小绿人充电站"
+               data-name="小绿人 · 天目山路站" data-brand="小绿人" data-status="available" data-addr="西湖区天目山路" data-ports="4/10" data-price="0.3元/时"
+               data-price-value="0.3" data-distance="1600" data-power="800W" data-plugs="两头插" data-common="company" data-subway="小和山">
+            <span class="pin-icon">⚡</span>
+          </div>
+          <div class="map-pin offline" data-id="10" style="top:68%;left:30%" onclick="selectPin(this)" title="驴充充"
+               data-name="驴充充 · 屏峰校区站" data-brand="驴充充" data-status="offline" data-addr="西湖区屏峰校区" data-ports="0/8" data-price="0.4元/时"
+               data-price-value="0.4" data-distance="2800" data-power="900W" data-plugs="三头插" data-common="home" data-subway="小和山">
+            <span class="pin-icon">⚡</span>
+          </div>
+
+          <div class="map-me"></div>
+          <div class="map-detail" id="mapDetail">
+            <div class="map-detail-title" id="mapDetailTitle">点击地图定位查看详情</div>
+            <div class="map-detail-sub" id="mapDetailSub"></div>
+            <div class="map-detail-tags" id="mapDetailTags"></div>
+          </div>
+        </div>
+
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input id="searchInput" class="search-input" placeholder="搜索充电桩 / 地址 / 品牌..." />
+        </div>
+
+        <div class="filter-bar">
+          <button id="nearbyBtn" class="filter-pill active">附近 <span class="caret">▾</span></button>
+          <button id="sortBtn" class="filter-pill">排序 <span class="caret">▾</span></button>
+          <button id="commonBtn" class="filter-pill">常用位置 <span class="caret">▾</span></button>
+          <button id="subwayBtn" class="filter-pill">地铁 <span class="caret">▾</span></button>
+        </div>
+
+        <div id="filtersWrap" class="filters-wrap hidden">
+          <div class="filter-section active" data-section="nearby">
+            <div class="filter-row">
+              <span class="filter-label">距离</span>
+              <button class="chip active" data-group="distance" data-value="all">全部</button>
+              <button class="chip" data-group="distance" data-value="1km">1KM以内</button>
+              <button class="chip" data-group="distance" data-value="3km">3KM以内</button>
+            </div>
+          </div>
+
+          <div class="filter-section" data-section="sort">
+            <div class="filter-row sort-row">
+              <span class="filter-label">排序</span>
+              <button class="chip active" data-group="sort" data-value="recommend">推荐排序</button>
+              <button class="chip" data-group="sort" data-value="distance">距离优先</button>
+              <button class="chip" data-group="sort" data-value="price">低价优先</button>
+            </div>
+          </div>
+
+          <div class="filter-section" data-section="common">
+            <div class="filter-row">
+              <span class="filter-label">常用位置</span>
+              <button class="chip active" data-group="common" data-value="all">不限</button>
+              <button class="chip" data-group="common" data-value="home">家</button>
+              <button class="chip" data-group="common" data-value="company">公司</button>
+            </div>
+          </div>
+
+          <div class="filter-section" data-section="subway">
+            <div class="filter-row">
+              <span class="filter-label">地铁</span>
+              <button class="chip active" data-group="subway" data-value="all">不限</button>
+              <button class="chip" data-group="subway" data-value="小和山">小和山</button>
+              <button class="chip" data-group="subway" data-value="留下">留下</button>
+              <button class="chip" data-group="subway" data-value="西溪湿地南">西溪湿地南</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-rec">
+          <div class="ai-rec-header">
+            <span class="ai-badge">AI 推荐</span>
+            <span style="font-size:12px;color:var(--text2)">基于您当前电量与位置</span>
+          </div>
+          <div class="ai-rec-text">
+            当前电量约 <strong>35%</strong>，建议先跑完手上2单再充电。<strong>350m外的小绿人站</strong>有空位、费用最低（0.3元/时），预计15:40到达最划算（避开高峰电价）。
+          </div>
+        </div>
+
+        <div id="stationListWrap" class="station-list">
+          <div id="stationList"></div>
+        </div>
+      </div>
+
+      <!-- SCREEN: AI SCAN -->
+      <div class="screen" id="screen-scan">
+        <div class="scan-area">
+          <div class="scan-frame">
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
+            <div class="scan-line"></div>
+          </div>
+          <div class="scan-text">将摄像头对准充电桩，AI自动识别</div>
+        </div>
+
+        <div class="scan-result">
+          <div class="scan-result-title">
+            <span class="ai-badge">AI</span>
+            识别结果
+          </div>
+          <div class="result-row"><span class="result-label">品牌</span><span class="result-value ai">小绿人 (96%)</span></div>
+          <div class="result-row"><span class="result-label">插头类型</span><span class="result-value ai">三头插 + 两头插</span></div>
+          <div class="result-row"><span class="result-label">最大功率</span><span class="result-value ai">1000W</span></div>
+          <div class="result-row"><span class="result-label">收费标准</span><span class="result-value ai">0.3元/小时</span></div>
+          <div class="result-row"><span class="result-label">充电口数量</span><span class="result-value ai">12口</span></div>
+          <div class="result-row"><span class="result-label">位置</span><span class="result-value">已自动GPS定位</span></div>
+          <div class="confidence-bar"><div class="confidence-fill" id="conf-bar" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <span style="font-size:11px;color:var(--text2)">AI识别置信度</span>
+            <span style="font-size:11px;color:var(--accent);font-weight:700">96%</span>
+          </div>
+        </div>
+
+        <button class="plan-btn primary" style="margin-top:8px" onclick="alert('标记已提交，等待第二人确认！')">📍 确认并标记此充电桩</button>
+        <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">标记成功后需另一位用户现场确认 · 审核通过获得积分奖励</p>
+      </div>
+
+      <!-- SCREEN: INSURANCE -->
+      <div class="screen" id="screen-insurance">
+        <div class="insurance-hero">
+          <h2>🛡️ 骑行无忧保</h2>
+          <p>3.8亿电动车用户的安全保障<br>充电时投保，每天低至0.27元</p>
+        </div>
+
+        <div class="ai-pricing">
+          <div class="ai-pricing-title">🧠 AI智能推荐</div>
+          根据您的骑行数据：日均骑行18km、主要在城区，推荐「骑手尊享版」，含三者险+意外险+充电自燃险，性价比最高。
+          <div class="risk-row">
+            <div class="risk-chip">风险评分 <strong>72</strong></div>
+            <div class="risk-chip">折扣 <strong>85%</strong></div>
+          </div>
+        </div>
+
+        <div class="insurance-plan popular">
+          <div class="plan-header">
+            <div class="plan-name">🔥 骑手尊享版</div>
+            <div class="plan-price"><span class="amount">0.73</span><span class="unit"> 元/天</span></div>
+          </div>
+          <div class="plan-features">
+            <div class="plan-feature highlight">第三者责任险 · 保额50万</div>
+            <div class="plan-feature highlight">驾驶人意外险 · 保额20万</div>
+            <div class="plan-feature highlight">充电自燃险 · 保额3万</div>
+            <div class="plan-feature">24h道路救援服务</div>
+            <div class="plan-feature">AI理赔一键报案</div>
+          </div>
+          <button class="plan-btn primary">立即投保 · 0.73元/天</button>
+        </div>
+
+        <div class="insurance-plan">
+          <div class="plan-header">
+            <div class="plan-name">🏷️ 基础版</div>
+            <div class="plan-price"><span class="amount">0.27</span><span class="unit"> 元/天</span></div>
+          </div>
+          <div class="plan-features">
+            <div class="plan-feature">第三者责任险 · 保额10万</div>
+            <div class="plan-feature">驾驶人意外险 · 保额5万</div>
+          </div>
+          <button class="plan-btn outline">适合日常通勤居民</button>
+        </div>
+
+        <div class="insurance-plan">
+          <div class="plan-header">
+            <div class="plan-name">👨‍👩‍👧 家庭版</div>
+            <div class="plan-price"><span class="amount">1.09</span><span class="unit"> 元/天</span></div>
+          </div>
+          <div class="plan-features">
+            <div class="plan-feature">覆盖家庭2辆电动车</div>
+            <div class="plan-feature">三者险50万 + 意外险20万</div>
+            <div class="plan-feature">充电自燃险 + 盗抢险</div>
+            <div class="plan-feature">车上人员意外险（含后座乘客）</div>
+          </div>
+          <button class="plan-btn outline">适合有孩家庭</button>
+        </div>
+
+        <div class="ai-pricing">
+          <div class="ai-pricing-title">🧩 可单独购买</div>
+          <div class="addon-grid">
+            <div class="addon-card">
+              <div class="addon-info">
+                <div class="addon-name">充电自燃险</div>
+                <div class="addon-sub">保障充电自燃风险 · 保额3万</div>
+              </div>
+              <div class="addon-price">¥0.08/天</div>
+              <button class="addon-btn">单独投保</button>
+            </div>
+            <div class="addon-card">
+              <div class="addon-info">
+                <div class="addon-name">第三者责任险</div>
+                <div class="addon-sub">交通事故第三方保障 · 保额20万</div>
+              </div>
+              <div class="addon-price">¥0.11/天</div>
+              <button class="addon-btn">单独投保</button>
+            </div>
+            <div class="addon-card">
+              <div class="addon-info">
+                <div class="addon-name">盗抢险</div>
+                <div class="addon-sub">车辆丢失/被盗保障 · 保额1万</div>
+              </div>
+              <div class="addon-price">¥0.05/天</div>
+              <button class="addon-btn">单独投保</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: PROFILE -->
+      <div class="screen" id="screen-profile">
+        <div class="profile-header">
+          <div class="avatar">张</div>
+          <div class="profile-name">张骑手</div>
+          <div class="profile-role">外卖骑手 · 信用等级 A</div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-num orange">127</div><div class="stat-label">标记充电桩</div></div>
+          <div class="stat-card"><div class="stat-num blue">89</div><div class="stat-label">审核通过</div></div>
+          <div class="stat-card"><div class="stat-num green">¥46.5</div><div class="stat-label">累计奖励</div></div>
+        </div>
+
+        <div class="credit-section">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px;font-weight:700">信用分</span>
+            <span style="font-size:20px;font-weight:900;color:var(--success)">920</span>
+          </div>
+          <div class="credit-bar-bg"><div class="credit-bar-fill" id="credit-bar" style="width:0%"></div></div>
+          <div class="credit-labels"><span>300 低</span><span>600 中</span><span>1000 高</span></div>
+          <p style="font-size:11px;color:var(--text2);margin-top:6px">高信用用户享受：标记免二次确认 · 保险费率优惠15% · 优先客服</p>
+        </div>
+
+        <div style="margin-top:16px">
+          <div class="menu-item"><div class="menu-left"><span class="menu-icon">📋</span><span class="menu-label">我的保单</span></div><span class="menu-arrow">›</span></div>
+          <div class="menu-item"><div class="menu-left"><span class="menu-icon">💰</span><span class="menu-label">奖励明细</span></div><span class="menu-arrow">›</span></div>
+          <div class="menu-item"><div class="menu-left"><span class="menu-icon">📊</span><span class="menu-label">骑行报告</span></div><span class="menu-arrow">›</span></div>
+          <div class="menu-item"><div class="menu-left"><span class="menu-icon">⚙️</span><span class="menu-label">设置</span></div><span class="menu-arrow">›</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="switchScreen('map')"><span>🗺️</span><span>找桩</span></div>
+      <div class="nav-item" onclick="switchScreen('scan')"><span>📷</span><span>识桩</span></div>
+      <div class="nav-item" onclick="switchScreen('insurance')"><span>🛡️</span><span>保险</span></div>
+      <div class="nav-item" onclick="switchScreen('profile')"><span>👤</span><span>我的</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById('screen-' + id).classList.add('active');
+
+  const navs = document.querySelectorAll('.nav-item');
+  const idx = {map:0,scan:1,insurance:2,profile:3}[id];
+  navs[idx].classList.add('active');
+
+  const statusBar = document.getElementById('statusBar');
+  if (statusBar) {
+    statusBar.classList.toggle('status-map', id === 'map');
+  }
+
+  if (id === 'scan') {
+    setTimeout(() => { document.getElementById('conf-bar').style.width = '96%'; }, 300);
+  }
+  if (id === 'profile') {
+    setTimeout(() => { document.getElementById('credit-bar').style.width = '92%'; }, 300);
+  }
+
+  document.querySelector('.phone-content').scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function selectPin(el) {
+  document.querySelectorAll('.map-pin').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  document.querySelectorAll('.station-card').forEach(c => c.classList.remove('active'));
+
+  const detail = document.getElementById('mapDetail');
+  const title = document.getElementById('mapDetailTitle');
+  const sub = document.getElementById('mapDetailSub');
+  const tags = document.getElementById('mapDetailTags');
+
+  const status = el.dataset.status;
+  const statusText = status === 'available' ? '空闲' : status === 'busy' ? '繁忙' : '离线';
+  const statusTag = status === 'available' ? 'green' : status === 'busy' ? 'yellow' : 'gray';
+
+  title.textContent = el.dataset.name;
+  sub.textContent = `${el.dataset.addr} · ${el.dataset.price}`;
+  tags.innerHTML = `
+    <span class="tag ${statusTag}"><span class="status-dot status-${status}"></span> ${statusText}</span>
+    <span class="tag blue">空位 ${el.dataset.ports}</span>
+  `;
+  detail.classList.add('show');
+
+  const id = parseInt(el.dataset.id || (stationPins.indexOf(el) + 1), 10);
+  stationState.selectedId = id;
+  renderStationList();
+  const card = document.querySelector(`[data-card-id="${id}"]`);
+  const wrap = document.getElementById('stationListWrap');
+  if (card && wrap) {
+    card.classList.add('active');
+    wrap.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+const stationState = {
+  distance: 'all',
+  common: 'all',
+  subway: 'all',
+  sort: 'recommend',
+  keyword: '',
+  selectedId: null
+};
+
+const stationPins = Array.from(document.querySelectorAll('.map-pin'));
+const stationListEl = document.getElementById('stationList');
+
+function buildStations() {
+  return stationPins.map((pin, idx) => ({
+    id: parseInt(pin.dataset.id || (idx + 1), 10),
+    name: pin.dataset.name,
+    status: pin.dataset.status,
+    address: pin.dataset.addr,
+    brand: pin.dataset.brand,
+    ports: pin.dataset.ports,
+    priceText: pin.dataset.price,
+    priceValue: parseFloat(pin.dataset.priceValue || '0'),
+    distance: parseFloat(pin.dataset.distance || '0'),
+    power: pin.dataset.power,
+    powerValue: parseInt(pin.dataset.powerValue || pin.dataset.power || '0', 10) || 0,
+    plugs: pin.dataset.plugs,
+    common: pin.dataset.common,
+    subway: pin.dataset.subway,
+    pin
+  }));
+}
+
+function applyFilters(list) {
+  return list.filter((s) => {
+    if (stationState.distance === '1km' && s.distance > 1000) return false;
+    if (stationState.distance === '3km' && s.distance > 3000) return false;
+    if (stationState.common !== 'all' && s.common !== stationState.common) return false;
+    if (stationState.subway !== 'all' && s.subway !== stationState.subway) return false;
+    if (stationState.keyword) {
+      const key = stationState.keyword.toLowerCase();
+      const hay = `${s.name} ${s.address} ${s.brand}`.toLowerCase();
+      if (!hay.includes(key)) return false;
+    }
+    return true;
+  });
+}
+
+function sortStations(list) {
+  const statusWeight = { available: 3, busy: 2, offline: 1 };
+  if (stationState.sort === 'distance') {
+    return list.sort((a, b) => a.distance - b.distance);
+  }
+  if (stationState.sort === 'price') {
+    return list.sort((a, b) => a.priceValue - b.priceValue);
+  }
+  return list.sort((a, b) => {
+    const w = statusWeight[b.status] - statusWeight[a.status];
+    if (w !== 0) return w;
+    if (a.distance !== b.distance) return a.distance - b.distance;
+    return a.priceValue - b.priceValue;
+  });
+}
+
+function renderStationList() {
+  if (!stationListEl) return;
+  const all = buildStations();
+  const filtered = applyFilters(all);
+  let sorted = sortStations(filtered);
+
+  if (stationState.selectedId) {
+    const exists = sorted.some((s) => s.id === stationState.selectedId);
+    if (!exists) {
+      const selected = all.find((s) => s.id === stationState.selectedId);
+      if (selected) {
+        sorted = [selected, ...sorted];
+      }
+    } else {
+      const idx = sorted.findIndex((s) => s.id === stationState.selectedId);
+      if (idx > 0) {
+        const picked = sorted.splice(idx, 1)[0];
+        sorted.unshift(picked);
+      }
+    }
+  }
+
+  if (sorted.length === 0) {
+    stationListEl.innerHTML = '<div class="station-card">暂无匹配的充电桩</div>';
+    return;
+  }
+
+  stationListEl.innerHTML = sorted.map((s) => {
+    const statusText = s.status === 'available' ? '空闲' : s.status === 'busy' ? '繁忙' : '离线';
+    const statusTag = s.status === 'available' ? 'green' : s.status === 'busy' ? 'yellow' : 'gray';
+    const expanded = stationState.selectedId === s.id;
+    return `
+      <div class="station-card ${expanded ? 'alert' : ''}" data-card-id="${s.id}" onclick="selectPinById(${s.id})">
+        <div class="station-header">
+          <div class="station-name">${s.name}</div>
+          <div class="station-dist">${Math.round(s.distance)}m</div>
+        </div>
+        <div class="station-tags">
+          <span class="tag ${statusTag}">${statusText}</span>
+          <span class="tag green">空位 ${s.ports}</span>
+          <span class="tag blue">${s.plugs}</span>
+          <span class="tag orange">${s.power}</span>
+        </div>
+        <div class="station-info">
+          <span>💰 ${s.priceText}</span>
+          <span>📍 ${s.address}</span>
+        </div>
+        ${expanded ? `
+          <div class="station-info">
+            <span>🏷️ ${s.brand}</span>
+            <span>🚇 ${s.subway}</span>
+          </div>
+          <div class="card-actions">
+            <button class="nav-btn">导航至此处</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function selectPinById(id) {
+  const pin = document.querySelector(`.map-pin[data-id="${id}"]`);
+  if (pin) {
+    selectPin(pin);
+  }
+}
+
+function bindChips() {
+  const chips = document.querySelectorAll('.chip');
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const group = chip.dataset.group;
+      const value = chip.dataset.value;
+      if (!group) return;
+      stationState[group] = value;
+      chips.forEach((c) => {
+        if (c.dataset.group === group) c.classList.remove('active');
+      });
+      chip.classList.add('active');
+      renderStationList();
+    });
+  });
+}
+
+bindChips();
+renderStationList();
+
+function updateStatusBar() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const timeEl = document.getElementById('statusTime');
+  if (timeEl) timeEl.textContent = `${h}:${m}`;
+}
+
+updateStatusBar();
+setInterval(updateStatusBar, 30000);
+
+const filtersWrap = document.getElementById('filtersWrap');
+const nearbyBtn = document.getElementById('nearbyBtn');
+const sortBtn = document.getElementById('sortBtn');
+const commonBtn = document.getElementById('commonBtn');
+const subwayBtn = document.getElementById('subwayBtn');
+const searchInput = document.getElementById('searchInput');
+
+function showSection(key) {
+  document.querySelectorAll('.filter-section').forEach((sec) => {
+    sec.classList.toggle('active', sec.dataset.section === key);
+  });
+}
+
+function togglePanel(btn, section) {
+  const isOpen = !filtersWrap.classList.contains('hidden') && btn.classList.contains('active');
+  document.querySelectorAll('.filter-pill').forEach((b) => b.classList.remove('active'));
+  if (isOpen) {
+    filtersWrap.classList.add('hidden');
+    return;
+  }
+  btn.classList.add('active');
+  filtersWrap.classList.remove('hidden');
+  showSection(section);
+}
+
+if (nearbyBtn && sortBtn && commonBtn && subwayBtn && filtersWrap) {
+  nearbyBtn.addEventListener('click', () => togglePanel(nearbyBtn, 'nearby'));
+  sortBtn.addEventListener('click', () => togglePanel(sortBtn, 'sort'));
+  commonBtn.addEventListener('click', () => togglePanel(commonBtn, 'common'));
+  subwayBtn.addEventListener('click', () => togglePanel(subwayBtn, 'subway'));
+}
+
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    stationState.keyword = e.target.value.trim();
+    renderStationList();
+  });
+}
+</script>
+</body>
+</html>
